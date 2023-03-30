@@ -1,6 +1,6 @@
 NAME = pipex
-CC = cc -Wall -Wextra -Werror
-FLAGS = 
+CC = cc 
+FLAGS = -Wall -Werror -Wextra
 AR = ar -r
 RM = rm -f
 HEAD = pipex.h
@@ -11,7 +11,8 @@ PRINTF = ./ft_printf/ft_printf.a
 HEADPRINTF = ./ft_printf/ft_printf.h
 
 
-SRC = 
+SRC = ./gnl/get_next_line.c\
+		./gnl/get_next_line_utils.c
 
 LIBFTSRC = ./libft/ft_atoi.c\
 		./libft/ft_bzero.c\

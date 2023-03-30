@@ -32,12 +32,10 @@ int	sslen(char const *s, char c)
 
 void	free_ss(char **ss)
 {
+	while (*ss)
 	{
-		while (*ss)
-		{
-			free(*ss);
-			ss++;
-		}
+		free(*ss);
+		ss++;
 	}
 }
 
