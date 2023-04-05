@@ -6,7 +6,7 @@
 /*   By: hnait <hnait@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/25 11:59:08 by hnait             #+#    #+#             */
-/*   Updated: 2023/04/05 10:55:32 by hnait            ###   ########.fr       */
+/*   Updated: 2023/04/05 13:54:14 by hnait            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,30 +21,37 @@ int	main(int argc, char **argv, char **arg_env)
 	int		id;
 
 	*env = NULL;
-	if(pipe(fd))
-		prompt_error("Error: Pipe failed");
 	check_argc_argv(argc, argv);
-	id = fork();
-	if (id < 0)
-		prompt_error("Error: Fork failed");
-	else if (id == 0)
+	if (pipe(fd))
+		prompt_error("Pipe failed");
+	id = fork_and_get_id();
+	if (id == 0)
 	{
 		cmd = get_command(argv[2], arg_env);
 		command_line = get_command_line(argv[2], argv[1]);
-		set_fd(fd, id);
+		set_fd(fd, id, argv[4]);
 	}
 	else
 	{
 		wait(NULL);
 		cmd = get_command(argv[3], arg_env);
 		command_line = get_command_line(argv[3], NULL);
-		set_fd(fd, id);
+		set_fd(fd, id, argv[4]);
 	}
-	// system("leaks pipex");
 	execve(cmd, command_line, env);
 }
 
-void	set_fd(int fd[2], int id)
+int	fork_and_get_id(void)
+{
+	int	id;
+
+	id = fork();
+	if (id < 0)
+		prompt_error("Fork failed");
+	return (id);
+}
+
+void	set_fd(int fd[2], int id, char *file_name)
 {
 	int	fd_file;
 
@@ -57,7 +64,9 @@ void	set_fd(int fd[2], int id)
 	{
 		close(fd[1]);
 		dup2(fd[0], 0);
-		fd_file = open("file", O_RDWR | O_CREAT | O_TRUNC, 0777);
+		fd_file = open(file_name, O_RDWR | O_CREAT | O_TRUNC, 0777);
+		if (fd_file < 0)
+			prompt_error("File not found");
 		dup2(fd_file, 1);
 	}
 }

@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   command.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: hnait <hnait@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/04/05 13:45:51 by hnait             #+#    #+#             */
+/*   Updated: 2023/04/05 13:46:25 by hnait            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "pipex.h"
 
 char	**get_command_line(char *cmd, char *file_name)
@@ -16,8 +28,9 @@ char	*get_command(char *cmd, char **env)
 {
 	char	*command;
 	char	**path;
-	char 	**split_command;
+	char	**split_command;
 	char	*valid_command;
+
 	path = get_path(env);
 	command = ft_strtrim(cmd, " ");
 	split_command = ft_split(command, ' ');
@@ -43,6 +56,8 @@ char	*check_command(char *command, char **path)
 	char	*tmp;
 
 	i = 0;
+	if (access(command, X_OK) == 0)
+		return (ft_strdup(command));
 	while (path[i])
 	{
 		tmp = ft_strjoin(path[i], "/", 0);
