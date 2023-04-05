@@ -6,7 +6,7 @@
 /*   By: hnait <hnait@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/25 12:01:03 by hnait             #+#    #+#             */
-/*   Updated: 2023/04/04 18:01:44 by hnait            ###   ########.fr       */
+/*   Updated: 2023/04/05 10:55:48 by hnait            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,5 +26,6 @@ char	**get_path(char **env);
 char	**get_command_line(char *cmd, char *file_name);
 void	check_argc_argv(int argc, char **argv);
 void	set_fd(int fd[2], int id);
+void	prompt_error(char *error);
 
 #endif

@@ -12,7 +12,9 @@ HEADPRINTF = ./ft_printf/ft_printf.h
 
 
 SRC = ./gnl/get_next_line.c\
-		./gnl/get_next_line_utils.c
+		./gnl/get_next_line_utils.c\
+		parcing.c\
+		command.c\
 
 LIBFTSRC = ./libft/ft_atoi.c\
 		./libft/ft_bzero.c\
