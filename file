@@ -1,2 +1,8 @@
 Makefile
+file
+ft_printf
+gnl
+libft
 main.c
+pipex
+pipex.h

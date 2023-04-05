@@ -6,163 +6,158 @@
 /*   By: hnait <hnait@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/25 11:59:08 by hnait             #+#    #+#             */
-/*   Updated: 2023/03/30 21:04:33 by hnait            ###   ########.fr       */
+/*   Updated: 2023/04/04 22:42:57 by hnait            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-int	main(int c, char **v, char **env)
+int	main(int argc, char **argv, char **arg_env)
 {
-	char	**path;
+	char	**command_line;
+	char	*cmd;
+	int		fd[2];
+	char	*env[1];
 	int		id;
-	int		pip[2];
-	char	*ex_env[1];
 
-	*ex_env = NULL;
-	pipe(pip);
-	if (c != 5)
-		return (0);
-	if (!env)
-		return (0);
-	path = get_path(env);
+	*env = NULL;
+	pipe(fd);
+	check_argc_argv(argc, argv);
 	id = fork();
 	if (id == 0)
-		first_command(v, path, pip, ex_env);
+	{
+		cmd = get_command(argv[2], arg_env);
+		command_line = get_command_line(argv[2], argv[1]);
+		set_fd(fd, id);
+	}
 	else
 	{
 		wait(NULL);
-		second_command(v, path, pip, ex_env);
+		cmd = get_command(argv[3], arg_env);
+		command_line = get_command_line(argv[3], NULL);
+		set_fd(fd, id);
+	}
+	// system("leaks pipex");
+	execve(cmd, command_line, env);
+}
+
+void	set_fd(int fd[2], int id)
+{
+	int	fd_file;
+
+	if (id == 0)
+	{
+		close(fd[0]);
+		dup2(fd[1], 1);
+	}
+	else
+	{
+		close(fd[1]);
+		dup2(fd[0], 0);
+		fd_file = open("file", O_RDWR | O_CREAT | O_TRUNC, 0777);
+		dup2(fd_file, 1);
 	}
 }
 
-void	first_command(char **v, char **path, int pip[2], char **ex_env)
+void	check_argc_argv(int argc, char **argv)
 {
-	char	*cmd;
-	char	*holder;
-	char	*all_command;
-	char	**mycmd;
+	char	*trimed_command1;
+	char	*trimed_command2;
 
-	close(pip[0]);
-	cmd = check_cmds(v[2], path);
-	holder = ft_strjoin(v[2], " ");
-	all_command = ft_strjoin(holder, v[1]);
-	mycmd = ft_split(all_command, ' ');
-	dup2(pip[1], 1);
-	close(pip[1]);
-	free(holder);
-	free(all_command);
-	execve(cmd, mycmd, ex_env);
+	if(argc != 5)
+	{
+		dup2(2, 1);
+		ft_printf("Error: Wrong number of arguments\n");
+		exit(1);
+	}
+	if (!*argv[2] || !*argv[3])
+	{
+		dup2(2, 1);
+		ft_printf("Error: Permissin denied\n");
+		exit(1);
+	}
+	trimed_command1 = ft_strtrim(argv[2], " ");
+	trimed_command2 = ft_strtrim(argv[3], " ");
+	if (!*trimed_command1 || !*trimed_command2)
+	{
+		dup2(2, 1);
+		ft_printf("Error: Command not found\n");
+		exit(1);
+	}
 }
 
-void	second_command(char **v, char **path, int pip[2], char **ex_env)
+char	**get_command_line(char *cmd, char *file_name)
 {
-	char	*cmd;
-	char	*holder;
-	char	*all_command;
-	char	**mycmd;
-	int		input_fd;
+	char	**command_line;
 
-	close(pip[1]);
-	cmd = check_cmds(v[3], path);
-	mycmd = ft_split(v[3], ' ');
-	input_fd = get_fd(v[4]);
-	dup2(pip[0], 0);
-	dup2(input_fd, 1);
-	close(pip[0]);
-	free(all_command);
-	execve(cmd, mycmd, ex_env);
+	cmd = ft_strjoin(cmd, " ", 0);
+	if (file_name)
+		cmd = ft_strjoin(cmd, file_name, 1);
+	command_line = ft_split(cmd, ' ');
+	free(cmd);
+	return (command_line);
 }
 
-int	get_fd(char *file_name)
+char	*get_command(char *cmd, char **env)
 {
-	int	fd;
+	char	*command;
+	char	**path;
+	char 	**split_command;
+	char	*valid_command;
+	path = get_path(env);
+	command = ft_strtrim(cmd, " ");
+	split_command = ft_split(command, ' ');
+	free(command);
+	command = ft_strdup(split_command[0]);
+	free_ss(split_command);
+	free(split_command);
+	valid_command = check_command(command, path);
+	free_ss(path);
+	free(path);
+	free(command);
+	if (valid_command)
+		return (valid_command);
+	else
+	{
+		perror("Error");
+		exit(1);
+	}
+	return (0);
+}
 
-	fd = open(file_name, O_WRONLY | O_CREAT | O_TRUNC);
-	if (fd == -1)
-		{
-			ft_printf("hhhhhhh\n");
-			exit(1);}
-	return (fd);
+char	*check_command(char *command, char **path)
+{
+	int		i;
+	char	*valid_command;
+	char	*tmp;
+
+	i = 0;
+	while (path[i])
+	{
+		tmp = ft_strjoin(path[i], "/", 0);
+		valid_command = ft_strjoin(tmp, command, 1);
+		if (access(valid_command, F_OK) == 0)
+			return (valid_command);
+		i++;
+		free(valid_command);
+	}
+	return (0);
 }
 
 char	**get_path(char **env)
 {
 	int		i;
 	char	**path;
-	char	*trimed_path;
 
 	i = 0;
-	while (ft_strncmp(env[i], "PATH=", 5))
-		i++;
-	trimed_path = ft_strtrim(env[i], "PATH=");
-	path = ft_split(trimed_path, ':');
-	free(trimed_path);
-	return (path);
-}
-
-char	*empty_command(char *command)
-{
-	char	*trimed_command;
-
-	if (!*command)
+	while (env[i])
 	{
-		ft_printf("permission denied:\n");
-		exit(0);
-	}
-	trimed_command = ft_strtrim(command, " ");
-	if (ft_strlen(trimed_command) == 0)
-	{
-		ft_printf("commade no found:\n");
-		exit(0);
-	}
-	return (trimed_command);
-}
-
-char	**functio(char **path, char *trimed_command, int i, int *read)
-{
-	char	*holder;
-	char	*concat;
-	char	**test_access;
-	char	*cmd;
-
-	holder = ft_strjoin(path[i], "/");
-	concat = ft_strjoin(holder, trimed_command);
-	test_access = ft_split(concat, ' ');
-	if (!access(*test_access, R_OK))
-	{
-		*read = 1;
-		if (!access(*test_access, X_OK))
-			return (free(holder), free(concat),
-				free(trimed_command), test_access);
-	}
-	free_ss(test_access);
-	free(test_access);
-	free(concat);
-	free(holder);
-	return (NULL);
-}
-
-char	*check_cmds(char *command, char **path)
-{
-	int		i;
-	int		read;
-	char	**test_access;
-	char	*trimed_command;
-
-	i = 0;
-	read = 0;
-	trimed_command = empty_command(command);
-	while (path[i])
-	{
-		test_access = functio(path, trimed_command, i, &read);
-		if (test_access != NULL)
-			return (*test_access);
+		if (ft_strncmp(env[i], "PATH=", 5) == 0)
+		{
+			path = ft_split(env[i] + 5, ':');
+			return (path);
+		}
 		i++;
 	}
-	if (read == 1)
-		ft_printf("permission denied: %s\n", trimed_command);
-	else
-		ft_printf("command not found: %s\n", trimed_command);
-	return (free_ss(path), free(path), free(trimed_command), exit(0), NULL);
+	return (0);
 }
